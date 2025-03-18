@@ -2,9 +2,11 @@ services:
   - type: web
     name: ordering-site-demo-jp
     runtime: php
-    buildCommand: "composer install --no-interaction --prefer-dist --optimize-autoloader && php artisan migrate --force"
-    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
     plan: free
+    rootDir: .
+    region: singapore
+    buildCommand: "./render-build.sh"
+    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
     envVars:
       - key: APP_NAME
         value: 発注サイト
@@ -14,6 +16,11 @@ services:
         value: false
       - key: APP_KEY
         value: base64:kO9djMXvBBMWEK1uwRovOnPPkA3Iyx2vuxbL0NTvORw=
+      - key: APP_URL
+        fromService:
+          type: web
+          name: ordering-site-demo-jp
+          property: url
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
@@ -43,4 +50,5 @@ services:
 
 databases:
   - name: ordersite-db
-    plan: free 
+    plan: free
+    region: singapore 
