@@ -26,8 +26,15 @@ RUN composer create-project --prefer-dist laravel/laravel:^10.0 /tmp/laravel && 
     cp -r /tmp/laravel/. /var/www/html/ && \
     rm -rf /tmp/laravel
 
-# Now copy our application files, overwriting the stock Laravel files
+# Copy our application files (special handling for nested structure)
 COPY . .
+
+# Check and handle the nested structure if it exists
+RUN if [ -d "ordersite" ] && [ -f "ordersite/routes/web.php" ]; then \
+    echo "Found nested structure, reorganizing..." && \
+    cp -rf ordersite/* . && \
+    rm -rf ordersite; \
+fi
 
 # Use the docker env file
 RUN cp .env.docker .env
