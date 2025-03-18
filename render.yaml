@@ -1,12 +1,12 @@
 services:
   - type: web
     name: ordering-site-demo-jp
-    runtime: php
+    env: ruby
+    buildCommand: "./render-build.sh"
+    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
     plan: free
     rootDir: .
     region: singapore
-    buildCommand: "./render-build.sh"
-    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
     envVars:
       - key: APP_NAME
         value: 発注サイト
@@ -17,10 +17,7 @@ services:
       - key: APP_KEY
         value: base64:kO9djMXvBBMWEK1uwRovOnPPkA3Iyx2vuxbL0NTvORw=
       - key: APP_URL
-        fromService:
-          type: web
-          name: ordering-site-demo-jp
-          property: url
+        value: https://ordering-site-demo-jp.onrender.com
       - key: LOG_CHANNEL
         value: stderr
       - key: LOG_LEVEL
