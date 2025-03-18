@@ -26,9 +26,26 @@ COPY . .
 # Use the docker env file
 RUN cp .env.docker .env
 
+# Create Laravel directories if they don't exist
+RUN mkdir -p storage/app/public && \
+    mkdir -p storage/framework/cache && \
+    mkdir -p storage/framework/sessions && \
+    mkdir -p storage/framework/testing && \
+    mkdir -p storage/framework/views && \
+    mkdir -p storage/logs && \
+    mkdir -p bootstrap/cache && \
+    mkdir -p public
+
+# Create a default index.php if it doesn't exist
+RUN if [ ! -f public/index.php ]; then \
+    echo '<?php echo "Laravel application is being set up..."; ?>' > public/index.php; \
+    fi
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 755 /var/www/html/public
 
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
