@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: ordering-site-demo-jp
+    env: php
+    plan: free
+    buildCommand: "composer install --no-interaction --prefer-dist --optimize-autoloader && php artisan migrate --force"
+    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: APP_NAME
+        value: 発注サイト
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        value: base64:kO9djMXvBBMWEK1uwRovOnPPkA3Iyx2vuxbL0NTvORw=
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: ordersite-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ordersite-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: ordersite-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ordersite-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ordersite-db
+          property: password
+
+databases:
+  - name: ordersite-db
+    plan: free 
