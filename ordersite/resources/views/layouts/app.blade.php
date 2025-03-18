@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="発注サイト - 簡単・スピーディーに発注業務を管理">
+    <meta name="theme-color" content="#1a6bb3">
     <title>@yield('title', '発注サイト')</title>
+    <link rel="icon" type="image/png" href="{{ asset('img/favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <style>
         body {
             font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
@@ -126,10 +134,10 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+        <nav class="navbar navbar-expand-md navbar-light fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand" href="{{ auth()->guard('admin')->check() ? route('admin.dashboard') : route('store.dashboard') }}">
-                    発注サイト
+                    <i class="bi bi-box-seam me-2"></i>発注サイト
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -138,36 +146,57 @@
                     <ul class="navbar-nav me-auto mb-2 mb-md-0">
                         @auth('admin')
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">ダッシュボード</a>
+                                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                                    <i class="bi bi-speedometer2 me-1"></i>ダッシュボード
+                                </a>
                             </li>
                         @endauth
                         
                         @auth('store')
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('store.dashboard') ? 'active' : '' }}" href="{{ route('store.dashboard') }}">発注入力</a>
+                                <a class="nav-link {{ request()->routeIs('store.dashboard') ? 'active' : '' }}" href="{{ route('store.dashboard') }}">
+                                    <i class="bi bi-card-checklist me-1"></i>発注入力
+                                </a>
                             </li>
                         @endauth
                     </ul>
                     
                     <ul class="navbar-nav ms-auto mb-2 mb-md-0">
                         @auth('admin')
-                            <li class="nav-item">
-                                <span class="nav-link">{{ auth()->guard('admin')->user()->admin_name }} さん</span>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle japanese-text" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-person-circle me-1"></i>{{ auth()->guard('admin')->user()->admin_name }} 様
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li>
+                                        <form action="{{ route('logout') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-box-arrow-right me-1"></i>ログアウト
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         @endauth
                         
                         @auth('store')
-                            <li class="nav-item">
-                                <span class="nav-link">{{ auth()->guard('store')->user()->store_name }} さん</span>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle japanese-text" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-shop me-1"></i>{{ auth()->guard('store')->user()->store_name }} 様
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <li>
+                                        <form action="{{ route('logout') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item">
+                                                <i class="bi bi-box-arrow-right me-1"></i>ログアウト
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
                             </li>
                         @endauth
-                        
-                        <li class="nav-item">
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-link nav-link">ログアウト</button>
-                            </form>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -185,14 +214,14 @@
                 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
+                            <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                     
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
@@ -203,14 +232,14 @@
                 <main class="col-12 main-content">
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ session('success') }}
+                            <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                     
                     @if (session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ session('error') }}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
@@ -224,13 +253,32 @@
     <footer class="footer mt-auto">
         <div class="container">
             <div class="text-center">
-                <p>&copy; {{ date('Y') }} 発注サイト - All Rights Reserved.</p>
+                <p class="mb-0">&copy; {{ date('Y') }} 発注サイト - All Rights Reserved.</p>
             </div>
         </div>
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
+    <script>
+        // Initialize tooltips
+        document.addEventListener("DOMContentLoaded", function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Add shadow to navbar on scroll
+            window.addEventListener('scroll', function() {
+                var navbar = document.querySelector('.navbar');
+                if (window.scrollY > 10) {
+                    navbar.classList.add('navbar-scrolled');
+                } else {
+                    navbar.classList.remove('navbar-scrolled');
+                }
+            });
+        });
+    </script>
     @yield('scripts')
 </body>
 </html> 

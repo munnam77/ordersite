@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログイン | 発注サイト</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
     <style>
         body {
             background-color: #f8f9fa;
@@ -52,10 +57,14 @@
 <body>
     <div class="container">
         <div class="login-container">
-            <h1 class="login-title">発注サイト</h1>
+            <div class="text-center mb-4">
+                <i class="bi bi-box-seam fs-1 text-primary"></i>
+                <h1 class="login-title">発注サイト</h1>
+            </div>
             
             @if ($errors->any())
                 <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     @foreach ($errors->all() as $error)
                         {{ $error }}<br>
                     @endforeach
@@ -64,34 +73,80 @@
             
             @if (session('success'))
                 <div class="alert alert-success">
-                    {{ session('success') }}
+                    <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
                 </div>
             @endif
             
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate>
                 @csrf
                 
-                <div class="mb-3">
+                <div class="mb-4">
                     <label for="login_id" class="form-label">ログインID</label>
-                    <input type="text" class="form-control" id="login_id" name="login_id" value="{{ old('login_id') }}" required autofocus>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" id="login_id" name="login_id" value="{{ old('login_id') }}" required autofocus>
+                    </div>
                 </div>
                 
                 <div class="mb-4">
                     <label for="login_password" class="form-label">パスワード</label>
-                    <input type="password" class="form-control" id="login_password" name="login_password" required>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                        <input type="password" class="form-control" id="login_password" name="login_password" required>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="user_type" class="form-label">ユーザータイプ</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="user_type" id="user_type_store" value="store" checked>
+                        <label class="form-check-label" for="user_type_store">
+                            <i class="bi bi-shop me-1"></i>店舗
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="user_type" id="user_type_admin" value="admin">
+                        <label class="form-check-label" for="user_type_admin">
+                            <i class="bi bi-person-badge me-1"></i>管理者
+                        </label>
+                    </div>
                 </div>
                 
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">ログイン</button>
+                <div class="d-grid gap-2 mb-4">
+                    <button type="submit" class="btn btn-primary py-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>ログイン
+                    </button>
                 </div>
             </form>
             
-            <div class="footer">
-                <p>ログインに関するお問い合わせは管理者にご連絡ください。</p>
+            <div class="footer text-center">
+                <p class="text-muted">ログインに関するお問い合わせは管理者にご連絡ください。</p>
             </div>
         </div>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation
+        (function () {
+            'use strict'
+            
+            // Fetch all the forms we want to apply custom validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+            
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
 </body>
 </html> 
