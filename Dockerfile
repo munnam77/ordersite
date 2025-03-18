@@ -20,7 +20,18 @@ RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy application files
+# First copy only essential application files to check the structure
+COPY composer.json composer.lock ./
+
+# Check if we need to create a new Laravel project
+RUN if [ ! -f artisan ]; then \
+    echo "Creating fresh Laravel project..." && \
+    composer create-project --prefer-dist laravel/laravel:^10.0 /tmp/laravel && \
+    cp -R /tmp/laravel/. /var/www/html/ && \
+    rm -rf /tmp/laravel; \
+fi
+
+# Now copy our actual application files (will overwrite the default Laravel files)
 COPY . .
 
 # Use the docker env file
@@ -33,13 +44,7 @@ RUN mkdir -p storage/app/public && \
     mkdir -p storage/framework/testing && \
     mkdir -p storage/framework/views && \
     mkdir -p storage/logs && \
-    mkdir -p bootstrap/cache && \
-    mkdir -p public
-
-# Create a default index.php if it doesn't exist
-RUN if [ ! -f public/index.php ]; then \
-    echo '<?php echo "Laravel application is being set up..."; ?>' > public/index.php; \
-    fi
+    mkdir -p bootstrap/cache
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
