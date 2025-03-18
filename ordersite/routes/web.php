@@ -21,6 +21,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Also handle the default Laravel welcome page path to redirect to login
+Route::get('/welcome', function () {
+    return redirect()->route('login');
+});
+
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
