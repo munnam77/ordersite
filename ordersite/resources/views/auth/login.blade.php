@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <title>ログイン | 発注サイト</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,7 +78,7 @@
                 </div>
             @endif
             
-            <form method="POST" action="{{ route('login') }}" class="needs-validation" novalidate>
+            <form method="POST" action="{{ url('/login') }}" class="needs-validation" novalidate>
                 @csrf
                 
                 <div class="mb-4">
@@ -93,22 +94,6 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-key"></i></span>
                         <input type="password" class="form-control" id="login_password" name="login_password" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="user_type" class="form-label">ユーザータイプ</label>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="user_type" id="user_type_store" value="store" checked>
-                        <label class="form-check-label" for="user_type_store">
-                            <i class="bi bi-shop me-1"></i>店舗
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="user_type" id="user_type_admin" value="admin">
-                        <label class="form-check-label" for="user_type_admin">
-                            <i class="bi bi-person-badge me-1"></i>管理者
-                        </label>
                     </div>
                 </div>
                 
