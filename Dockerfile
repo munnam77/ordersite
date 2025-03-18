@@ -21,33 +21,13 @@ RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Create Laravel directory structure
-RUN mkdir -p app bootstrap config database public resources routes storage tests vendor
+# Start with a fresh Laravel installation to ensure we have the complete structure
+RUN composer create-project --prefer-dist laravel/laravel:^10.0 /tmp/laravel && \
+    cp -r /tmp/laravel/. /var/www/html/ && \
+    rm -rf /tmp/laravel
 
-# Copy our actual application files
+# Now copy our application files, overwriting the stock Laravel files
 COPY . .
-
-# If artisan doesn't exist, install Laravel core files
-RUN if [ ! -f "artisan" ]; then \
-    echo "Installing Laravel core files..." && \
-    # Create a fresh Laravel installation in a temporary directory
-    composer create-project --prefer-dist laravel/laravel:^10.0 /tmp/laravel && \
-    # Copy only important Laravel files that might be missing
-    cp -n /tmp/laravel/artisan /var/www/html/ 2>/dev/null || true && \
-    cp -n /tmp/laravel/package.json /var/www/html/ 2>/dev/null || true && \
-    cp -n /tmp/laravel/webpack.mix.js /var/www/html/ 2>/dev/null || true && \
-    # Copy directories structure but don't overwrite existing files
-    mkdir -p bootstrap/cache && \
-    mkdir -p public && \
-    mkdir -p storage/app/public && \
-    mkdir -p storage/framework/cache && \
-    mkdir -p storage/framework/sessions && \
-    mkdir -p storage/framework/testing && \
-    mkdir -p storage/framework/views && \
-    mkdir -p storage/logs && \
-    # Remove the temporary Laravel project
-    rm -rf /tmp/laravel; \
-fi
 
 # Use the docker env file
 RUN cp .env.docker .env
