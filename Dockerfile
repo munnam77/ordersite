@@ -3,7 +3,7 @@ FROM php:8.1-apache
 # Set working directory
 WORKDIR /var/www/html
 
-# Install dependencies
+# Install dependencies including rsync
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpng-dev \
@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    curl
+    curl \
+    rsync
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
@@ -20,33 +21,38 @@ RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# First, create directories for a proper Laravel structure
+# Create Laravel directory structure
 RUN mkdir -p app bootstrap config database public resources routes storage tests vendor
 
-# Copy our actual application files first (so the Laravel installer doesn't overwrite them)
+# Copy our actual application files
 COPY . .
 
-# If the app isn't already a Laravel app, install Laravel to provide missing files
+# If artisan doesn't exist, install Laravel core files
 RUN if [ ! -f "artisan" ]; then \
+    echo "Installing Laravel core files..." && \
+    # Create a fresh Laravel installation in a temporary directory
     composer create-project --prefer-dist laravel/laravel:^10.0 /tmp/laravel && \
-    # Copy only missing files, don't overwrite existing files
-    rsync -av --ignore-existing /tmp/laravel/ /var/www/html/ && \
+    # Copy only important Laravel files that might be missing
+    cp -n /tmp/laravel/artisan /var/www/html/ 2>/dev/null || true && \
+    cp -n /tmp/laravel/package.json /var/www/html/ 2>/dev/null || true && \
+    cp -n /tmp/laravel/webpack.mix.js /var/www/html/ 2>/dev/null || true && \
+    # Copy directories structure but don't overwrite existing files
+    mkdir -p bootstrap/cache && \
+    mkdir -p public && \
+    mkdir -p storage/app/public && \
+    mkdir -p storage/framework/cache && \
+    mkdir -p storage/framework/sessions && \
+    mkdir -p storage/framework/testing && \
+    mkdir -p storage/framework/views && \
+    mkdir -p storage/logs && \
+    # Remove the temporary Laravel project
     rm -rf /tmp/laravel; \
 fi
 
 # Use the docker env file
 RUN cp .env.docker .env
 
-# Ensure correct directory structure with proper ownership
-RUN mkdir -p storage/app/public \
-    storage/framework/cache \
-    storage/framework/sessions \
-    storage/framework/testing \
-    storage/framework/views \
-    storage/logs \
-    bootstrap/cache
-
-# Set ownership and permissions (critical for Laravel)
+# Set correct permissions
 RUN chown -R www-data:www-data /var/www/html && \
     find /var/www/html -type d -exec chmod 755 {} \; && \
     find /var/www/html/storage -type d -exec chmod 775 {} \; && \
@@ -55,7 +61,7 @@ RUN chown -R www-data:www-data /var/www/html && \
 # Install dependencies
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
-# Create any symbolic links and clear caches
+# Configure Laravel, create links and clear caches
 RUN php artisan clear-compiled && \
     php artisan storage:link && \
     php artisan route:clear && \
@@ -63,7 +69,7 @@ RUN php artisan clear-compiled && \
     php artisan view:clear && \
     php artisan cache:clear
 
-# Make a production-optimized build after all customizations
+# Make production-optimized build
 RUN php artisan route:cache && \
     php artisan config:cache && \
     php artisan view:cache
