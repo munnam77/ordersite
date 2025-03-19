@@ -18,8 +18,13 @@ class ForceHttps
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->secure() && (App::environment('production') || env('FORCE_HTTPS', false))) {
-            // Force HTTPS in production
+        // Check if request is already secure OR if X-Forwarded-Proto header is 'https'
+        $isSecure = $request->secure() 
+                   || $request->header('X-Forwarded-Proto') == 'https'
+                   || $request->header('X-Forwarded-Ssl') == 'on';
+        
+        if (!$isSecure && (App::environment('production') || env('FORCE_HTTPS', false))) {
+            // Only redirect if not already on HTTPS
             return redirect()->secure($request->getRequestUri());
         }
 
