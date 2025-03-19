@@ -16,13 +16,10 @@ class TrustProxies extends Middleware
 
     /**
      * The headers that should be used to detect proxies.
+     * Using direct hex value (0x7F = 127) to ensure compatibility with all Laravel versions
+     * This value enables all X-Forwarded-* headers
      *
      * @var int
      */
-    protected $headers =
-        Request::HEADER_X_FORWARDED_FOR |
-        Request::HEADER_X_FORWARDED_HOST |
-        Request::HEADER_X_FORWARDED_PORT |
-        Request::HEADER_X_FORWARDED_PROTO |
-        Request::HEADER_X_FORWARDED_AWS_ELB;
+    protected $headers = 0x7F; // Equivalent to all X-Forwarded-* headers
 } 

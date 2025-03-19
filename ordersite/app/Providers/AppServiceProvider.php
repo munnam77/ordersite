@@ -22,10 +22,11 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // For Render.com deployment, trust the proxies
-        // Using numeric value directly instead of constants for compatibility
+        // Using integer value directly to ensure compatibility with all Laravel versions
+        // This is equivalent to enabling all X-Forwarded-* headers
         Request::setTrustedProxies(
             ['*'],
-            Request::HEADER_X_FORWARDED_ALL
+            0x7F  // This avoids using any constants for maximum compatibility
         );
 
         // Force HTTPS in production
