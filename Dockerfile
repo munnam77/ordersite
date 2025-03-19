@@ -39,13 +39,82 @@ fi
 # Use the docker env file
 RUN cp .env.docker .env
 
+# Apply compatibility fixes BEFORE running composer install
+RUN mkdir -p app/Providers app/Http/Middleware
+
+# Create AppServiceProvider.php with compatibility fixes
+RUN echo '<?php\n\
+\n\
+namespace App\\Providers;\n\
+\n\
+use Illuminate\\Support\\ServiceProvider;\n\
+use Illuminate\\Support\\Facades\\URL;\n\
+use Illuminate\\Http\\Request;\n\
+\n\
+class AppServiceProvider extends ServiceProvider\n\
+{\n\
+    /**\n\
+     * Register any application services.\n\
+     */\n\
+    public function register(): void\n\
+    {\n\
+        //\n\
+    }\n\
+\n\
+    /**\n\
+     * Bootstrap any application services.\n\
+     */\n\
+    public function boot(): void\n\
+    {\n\
+        // For Render.com deployment, trust the proxies\n\
+        // Using integer value directly to ensure compatibility with all Laravel versions\n\
+        // This is equivalent to enabling all X-Forwarded-* headers\n\
+        Request::setTrustedProxies(\n\
+            [\"*\"],\n\
+            0x7F  // This avoids using any constants for maximum compatibility\n\
+        );\n\
+\n\
+        // Force HTTPS in production\n\
+        if (env(\"FORCE_HTTPS\", false) || env(\"APP_ENV\") === \"production\") {\n\
+            URL::forceScheme(\"https\");\n\
+        }\n\
+    }\n\
+}' > app/Providers/AppServiceProvider.php
+
+# Create TrustProxies.php with compatibility fixes
+RUN echo '<?php\n\
+\n\
+namespace App\\Http\\Middleware;\n\
+\n\
+use Illuminate\\Http\\Middleware\\TrustProxies as Middleware;\n\
+use Illuminate\\Http\\Request;\n\
+\n\
+class TrustProxies extends Middleware\n\
+{\n\
+    /**\n\
+     * The trusted proxies for this application.\n\
+     *\n\
+     * @var array<int, string>|string|null\n\
+     */\n\
+    protected $proxies = \"*\";\n\
+\n\
+    /**\n\
+     * The headers that should be used to detect proxies.\n\
+     * Using direct hex value (0x7F = 127) to ensure compatibility with all Laravel versions\n\
+     * This value enables all X-Forwarded-* headers\n\
+     *\n\
+     * @var int\n\
+     */\n\
+    protected $headers = 0x7F; // Equivalent to all X-Forwarded-* headers\n\
+}' > app/Http/Middleware/TrustProxies.php
+
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html && \
     find /var/www/html -type d -exec chmod 755 {} \; && \
     find /var/www/html/storage -type d -exec chmod 775 {} \; && \
     find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \;
 
-# Install dependencies
+# Install dependencies AFTER applying compatibility fixes
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
 # Configure Laravel, create links and clear caches
