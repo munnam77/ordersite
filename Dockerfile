@@ -13,10 +13,15 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    rsync
+    rsync \
+    libssl-dev \
+    ssl-cert
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
+
+# Enable Apache modules
+RUN a2enmod rewrite headers ssl
 
 # Install composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -45,10 +50,15 @@ RUN chown -R www-data:www-data /var/www/html && \
     find /var/www/html/storage -type d -exec chmod 775 {} \; && \
     find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \;
 
+# Create storage directory for logs
+RUN mkdir -p /var/www/html/storage/logs && \
+    touch /var/www/html/storage/logs/laravel.log && \
+    chmod -R 775 /var/www/html/storage/logs
+
 # Install dependencies
 RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --optimize-autoloader --no-dev --ignore-platform-reqs
 
-# Configure Laravel, create links and clear caches
+# Configure Laravel, create links and clear caches but don't cache routes yet
 RUN php artisan clear-compiled && \
     php artisan storage:link && \
     php artisan route:clear && \
@@ -56,14 +66,43 @@ RUN php artisan clear-compiled && \
     php artisan view:clear && \
     php artisan cache:clear
 
-# Make production-optimized build
-RUN php artisan route:cache && \
-    php artisan config:cache && \
-    php artisan view:cache
+# Add custom AppServiceProvider that forces HTTPS in production
+RUN echo "<?php \
+    namespace App\\Providers; \
+    use Illuminate\\Support\\Facades\\URL; \
+    use Illuminate\\Support\\ServiceProvider; \
+    class AppServiceProvider extends ServiceProvider { \
+        public function register() {} \
+        public function boot() { \
+            if (env('FORCE_HTTPS', false)) { \
+                URL::forceScheme('https'); \
+            } \
+        } \
+    }" > /var/www/html/app/Providers/AppServiceProvider.php
 
 # Configure Apache
-RUN a2enmod rewrite && \
-    sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/public/g' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's/DocumentRoot \/var\/www\/html/DocumentRoot \/var\/www\/html\/public/g' /etc/apache2/sites-available/000-default.conf && \
+    echo '<Directory /var/www/html/public>\n\
+    Options Indexes FollowSymLinks\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>' >> /etc/apache2/sites-available/000-default.conf && \
+    echo '<IfModule mod_headers.c>\n\
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"\n\
+    Header always set X-Content-Type-Options "nosniff"\n\
+    Header always set X-XSS-Protection "1; mode=block"\n\
+    Header always set X-Frame-Options "SAMEORIGIN"\n\
+</IfModule>' >> /etc/apache2/sites-available/000-default.conf
+
+# Now make production-optimized build
+RUN php artisan config:cache
+
+# Create file to enable error reporting
+RUN echo "<?php \
+    ini_set('display_errors', 1); \
+    ini_set('display_startup_errors', 1); \
+    error_reporting(E_ALL);" > /var/www/html/public/error_reporting.php && \
+    echo "<?php require_once('error_reporting.php'); require_once('index.php');" > /var/www/html/public/debug.php
 
 # Expose port 80
 EXPOSE 80
