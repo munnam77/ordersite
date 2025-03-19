@@ -41,11 +41,16 @@ RUN cp .env.docker .env
 
 # Apply compatibility fixes BEFORE running composer install
 RUN mkdir -p app/Providers app/Http/Middleware
+RUN mkdir -p app/Fixes
+RUN mkdir -p config/fixes
 
 # Copy pre-created fix files from our repository
 COPY fix_AppServiceProvider.php app/Providers/AppServiceProvider.php
 COPY fix_TrustProxies.php app/Http/Middleware/TrustProxies.php
 COPY fix_SecureCookies.php app/Http/Middleware/SecureCookies.php
+COPY fix_VerifyCsrfToken.php app/Http/Middleware/VerifyCsrfToken.php
+COPY fix_bootstrap.php app/Fixes/BootstrapFixes.php
+COPY fix_session_config.php config/session.php
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html && \

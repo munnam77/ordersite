@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fix session configuration to prevent page expired errors
+        Config::set('session.secure', env('FORCE_HTTPS', false) || env('APP_ENV') === 'production');
+        Config::set('session.same_site', 'lax');
+        Config::set('session.http_only', true);
     }
 
     /**
