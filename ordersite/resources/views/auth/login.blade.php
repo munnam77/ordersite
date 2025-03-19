@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
+    <link rel="stylesheet" href="{{ secure_asset('css/custom.css') }}">
     <style>
         body {
             background-color: #f8f9fa;
@@ -78,7 +78,7 @@
                 </div>
             @endif
             
-            <form method="POST" action="{{ url('/login') }}" class="needs-validation" novalidate>
+            <form method="POST" action="{{ secure_url('/login') }}" class="needs-validation" novalidate>
                 @csrf
                 
                 <div class="mb-4">
@@ -110,11 +110,28 @@
         </div>
     </div>
     
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Form validation
         (function () {
             'use strict'
+            
+            // Add CSRF token to all Ajax requests
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            
+            // Prepare form submission to handle CSRF
+            $('form').on('submit', function() {
+                // Ensure CSRF token is included
+                if (!$(this).find('input[name="_token"]').length) {
+                    $(this).append('<input type="hidden" name="_token" value="{{ csrf_token() }}">');
+                }
+                return true;
+            });
             
             // Fetch all the forms we want to apply custom validation styles to
             var forms = document.querySelectorAll('.needs-validation')
