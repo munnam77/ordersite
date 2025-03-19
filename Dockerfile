@@ -45,6 +45,7 @@ RUN mkdir -p app/Providers app/Http/Middleware
 # Copy pre-created fix files from our repository
 COPY fix_AppServiceProvider.php app/Providers/AppServiceProvider.php
 COPY fix_TrustProxies.php app/Http/Middleware/TrustProxies.php
+COPY fix_SecureCookies.php app/Http/Middleware/SecureCookies.php
 
 # Set correct permissions
 RUN chown -R www-data:www-data /var/www/html && \
